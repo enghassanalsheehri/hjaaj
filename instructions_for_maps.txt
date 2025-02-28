@@ -1,0 +1,29 @@
+تعليمات لإصلاح خرائط منصة الحجاج للتنقل:
+
+1. يجب تحديث ملف pilgrim.html:
+   - افتح الملف في المحرر
+   - ابحث عن قسم Leaflet Map CSS and JS (الأسطر حوالي 7-13)
+   - استبدل هذا القسم بالكود التالي:
+
+```html
+<!-- Google Maps API with necessary libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key=INSERT_YOUR_API_KEY_HERE&libraries=places,geometry"></script>
+```
+
+2. يجب تحديث ملف driver.html:
+   - افتح الملف في المحرر
+   - أضف السطر التالي مباشرة قبل سطر `<link rel="stylesheet" href="css/styles.css">`:
+
+```html
+<!-- Google Maps API with necessary libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key=INSERT_YOUR_API_KEY_HERE&libraries=places,geometry"></script>
+```
+
+3. الحصول على مفتاح API:
+   - قم بزيارة Google Cloud Console: https://console.cloud.google.com/
+   - أنشئ مشروعًا جديدًا
+   - قم بتفعيل خدمة Maps JavaScript API
+   - قم بإنشاء مفتاح API
+   - استبدل INSERT_YOUR_API_KEY_HERE بمفتاح API الخاص بك في كلا الملفين
+
+ملاحظة: تأكد من إعداد قيود مناسبة لمفتاح API للأمان (مثل تقييد استخدامه على مواقع محددة).

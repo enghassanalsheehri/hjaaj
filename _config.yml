@@ -1,0 +1,18 @@
+name: منصة الحجاج للتنقل
+title: منصة الحجاج للتنقل | Hajj Mobility Platform
+description: منصة توصيل الحجاج بسائقي عربات المعاقين
+baseurl: ""
+url: ""
+
+# المسارات
+include:
+  - _redirects
+  - .nojekyll
+
+# توجيهات المسار
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: "default"

@@ -1,0 +1,2 @@
+# Este archivo está vacío porque este es un sitio web estático
+# y no requiere dependencias de Python

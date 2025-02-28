@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة الحاج | منصة الحجاج للتنقل</title>
+    
+    <!-- Mapbox CSS and JavaScript -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    
+    <!-- Mapbox Geocoder Plugin for Search -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    
+    <!-- Turf.js for Geospatial Analysis -->
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="js/pilgrim.js"></script>
+    <script src="js/gps-integration.js"></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>منصة الحجاج للتنقل</h1>
+                <p>Hajj Mobility Platform</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" data-i18n="nav.home">الرئيسية</a></li>
+                    <li><a href="pilgrim.html" class="active" data-i18n="nav.pilgrim">صفحة الحاج</a></li>
+                    <li><a href="driver.html" data-i18n="nav.driver">صفحة السائق</a></li>
+                    <li><a href="about.html" data-i18n="nav.about">عن المنصة</a></li>
+                </ul>
+            </nav>
+            <div class="language-switch">
+                <button class="lang-btn" data-lang="ar">العربية</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="pilgrim-dashboard">
+            <div class="container">
+                <h2 data-i18n="pilgrim.dashboard">لوحة تحكم الحاج</h2>
+                
+                <div class="dashboard-container">
+                    <div class="sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <h3>الحاج عبدالله محمد</h3>
+                            <p class="user-id">رقم التعريف: #P12345</p>
+                            <p class="user-status online"><i class="fas fa-circle"></i> متواجد</p>
+                        </div>
+                        
+                        <div class="nav-menu">
+                            <ul>
+                                <li>
+                                    <a href="#" class="active" data-tab="service-request">
+                                        <i class="fas fa-taxi"></i>
+                                        <span data-i18n="pilgrim.requestService">طلب خدمة</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" data-tab="active-requests">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        <span data-i18n="pilgrim.activeRequests">الطلبات النشطة</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" data-tab="history">
+                                        <i class="fas fa-history"></i>
+                                        <span data-i18n="pilgrim.requestHistory">سجل الطلبات</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" data-tab="profile-settings">
+                                        <i class="fas fa-cog"></i>
+                                        <span data-i18n="pilgrim.profileSettings">إعدادات الحساب</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <!-- Service Request Section -->
+                        <div id="service-request" class="dashboard-section active">
+                            <h3 data-i18n="pilgrim.requestNewService">طلب خدمة جديدة</h3>
+                            <form id="serviceRequestForm">
+                                <div class="form-group">
+                                    <label for="requestType" data-i18n="pilgrim.serviceType">نوع الخدمة</label>
+                                    <select id="requestType" required>
+                                        <option value="" data-i18n="pilgrim.selectService">اختر نوع الخدمة</option>
+                                        <option value="wheelchair" data-i18n="pilgrim.wheelchair">كرسي متحرك</option>
+                                        <option value="transportation" data-i18n="pilgrim.transportation">نقل</option>
+                                        <option value="guide" data-i18n="pilgrim.guide">مرشد</option>
+                                        <option value="emergency" data-i18n="pilgrim.emergency">طوارئ</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="requestSchedule" data-i18n="pilgrim.requestTime">وقت الطلب</label>
+                                    <select id="requestSchedule">
+                                        <option value="now" data-i18n="pilgrim.requestNow">الآن</option>
+                                        <option value="scheduled" data-i18n="pilgrim.scheduleForLater">جدولة لوقت لاحق</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="scheduleTimeContainer" class="form-group" style="display: none;">
+                                    <label for="scheduleTime" data-i18n="pilgrim.pickTime">اختر الوقت</label>
+                                    <input type="datetime-local" id="scheduleTime">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="location" data-i18n="pilgrim.location">الموقع</label>
+                                    <div class="location-input-group">
+                                        <input type="text" id="location" placeholder="أدخل موقعك" required>
+                                        <button type="button" id="getCurrentLocation" class="btn btn-secondary">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="destination" data-i18n="pilgrim.destination">الوجهة</label>
+                                    <input type="text" id="destination" placeholder="أدخل وجهتك" required>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="notes" data-i18n="pilgrim.additionalNotes">ملاحظات إضافية</label>
+                                    <textarea id="notes" rows="3" placeholder="أي تفاصيل إضافية تود إضافتها..."></textarea>
+                                </div>
+                                
+                                <div class="form-group maps-container">
+                                    <div class="map-wrapper">
+                                        <label data-i18n="pilgrim.currentLocation">الموقع الحالي</label>
+                                        <div id="current-location-map" class="map"></div>
+                                    </div>
+                                    <div class="map-wrapper">
+                                        <label data-i18n="pilgrim.destinationMap">خريطة الوجهة</label>
+                                        <div id="destination-map" class="map"></div>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary" data-i18n="pilgrim.submitRequest">تقديم الطلب</button>
+                            </form>
+                        </div>
+                        
+                        <!-- Active Requests Section -->
+                        <div id="active-requests" class="dashboard-section">
+                            <h3 data-i18n="pilgrim.yourActiveRequests">طلباتك النشطة</h3>
+                            
+                            <div class="request-cards">
+                                <div class="request-card">
+                                    <div class="request-header">
+                                        <span class="request-id">#REQ78901</span>
+                                        <span class="request-status pending" data-i18n="pilgrim.pending">قيد الانتظار</span>
+                                    </div>
+                                    <div class="request-body">
+                                        <p><strong data-i18n="pilgrim.serviceType">نوع الخدمة:</strong> <span data-i18n="pilgrim.transportation">نقل</span></p>
+                                        <p><strong data-i18n="pilgrim.requestTime">وقت الطلب:</strong> منذ 5 دقائق</p>
+                                        <p><strong data-i18n="pilgrim.from">من:</strong> فندق دار الإيمان جراند</p>
+                                        <p><strong data-i18n="pilgrim.to">إلى:</strong> المسجد الحرام - باب الملك فهد</p>
+                                    </div>
+                                    <div class="request-footer">
+                                        <button class="btn btn-secondary" data-i18n="pilgrim.cancelRequest">إلغاء الطلب</button>
+                                        <button class="btn btn-primary" data-i18n="pilgrim.viewDetails">تفاصيل</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Driver Tracking Container -->
+                                <div id="driver-tracking-container" class="driver-tracking-container">
+                                    <h4 data-i18n="pilgrim.trackDriver">تتبع السائق</h4>
+                                    <div id="tracking-map" class="tracking-map"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Request History Section -->
+                        <div id="history" class="dashboard-section">
+                            <h3 data-i18n="pilgrim.requestHistory">سجل الطلبات</h3>
+                            
+                            <div class="filter-control">
+                                <label for="historyFilter" data-i18n="pilgrim.filterBy">تصفية حسب:</label>
+                                <select id="historyFilter">
+                                    <option value="all" data-i18n="pilgrim.allRequests">جميع الطلبات</option>
+                                    <option value="completed" data-i18n="pilgrim.completed">المكتملة</option>
+                                    <option value="cancelled" data-i18n="pilgrim.cancelled">الملغية</option>
+                                </select>
+                            </div>
+                            
+                            <div class="request-cards">
+                                <!-- Completed Request -->
+                                <div class="request-card">
+                                    <div class="request-header">
+                                        <span class="request-id">#REQ45678</span>
+                                        <span class="request-status completed" data-i18n="pilgrim.completed">مكتمل</span>
+                                    </div>
+                                    <div class="request-body">
+                                        <p><strong data-i18n="pilgrim.serviceType">نوع الخدمة:</strong> <span data-i18n="pilgrim.wheelchair">كرسي متحرك</span></p>
+                                        <p><strong data-i18n="pilgrim.requestTime">وقت الطلب:</strong> 26 فبراير، 03:45 م</p>
+                                        <p><strong data-i18n="pilgrim.from">من:</strong> مخيم منى - قطاع 5</p>
+                                        <p><strong data-i18n="pilgrim.to">إلى:</strong> جسر الجمرات</p>
+                                        <p><strong data-i18n="pilgrim.driver">السائق:</strong> أحمد محمد (★4.8)</p>
+                                    </div>
+                                    <div class="request-footer">
+                                        <button class="btn btn-secondary" data-i18n="pilgrim.rateService">تقييم الخدمة</button>
+                                        <button class="btn btn-primary" data-i18n="pilgrim.viewDetails">تفاصيل</button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cancelled Request -->
+                                <div class="request-card">
+                                    <div class="request-header">
+                                        <span class="request-id">#REQ34567</span>
+                                        <span class="request-status cancelled" data-i18n="pilgrim.cancelled">ملغي</span>
+                                    </div>
+                                    <div class="request-body">
+                                        <p><strong data-i18n="pilgrim.serviceType">نوع الخدمة:</strong> <span data-i18n="pilgrim.guide">مرشد</span></p>
+                                        <p><strong data-i18n="pilgrim.requestTime">وقت الطلب:</strong> 25 فبراير، 10:15 ص</p>
+                                        <p><strong data-i18n="pilgrim.cancellationReason">سبب الإلغاء:</strong> تم إلغاؤه بواسطة المستخدم</p>
+                                    </div>
+                                    <div class="request-footer">
+                                        <button class="btn btn-primary" data-i18n="pilgrim.viewDetails">تفاصيل</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Profile Settings Section -->
+                        <div id="profile-settings" class="dashboard-section">
+                            <h3 data-i18n="pilgrim.profileSettings">إعدادات الحساب</h3>
+                            
+                            <form id="profileSettingsForm">
+                                <div class="form-group">
+                                    <label for="fullName" data-i18n="pilgrim.fullName">الاسم الكامل</label>
+                                    <input type="text" id="fullName" value="عبدالله محمد أحمد">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="phoneNumber" data-i18n="pilgrim.phoneNumber">رقم الهاتف</label>
+                                    <input type="tel" id="phoneNumber" value="+966 5xx xxx xxx">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="email" data-i18n="pilgrim.email">البريد الإلكتروني</label>
+                                    <input type="email" id="email" value="abdullah@example.com">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="nationality" data-i18n="pilgrim.nationality">الجنسية</label>
+                                    <input type="text" id="nationality" value="المملكة العربية السعودية">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="passportNumber" data-i18n="pilgrim.passportNumber">رقم جواز السفر</label>
+                                    <input type="text" id="passportNumber" value="A12345678">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="hajjGroup" data-i18n="pilgrim.hajjGroup">حملة الحج</label>
+                                    <input type="text" id="hajjGroup" value="حملة الفيصل">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="accommodation" data-i18n="pilgrim.accommodation">مكان الإقامة</label>
+                                    <input type="text" id="accommodation" value="فندق دار الإيمان جراند">
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label data-i18n="pilgrim.accessibilityNeeds">احتياجات خاصة</label>
+                                    <div class="checkbox-group">
+                                        <label><input type="checkbox"> <span data-i18n="pilgrim.wheelchairUser">مستخدم كرسي متحرك</span></label>
+                                        <label><input type="checkbox" checked> <span data-i18n="pilgrim.visualImpairment">ضعف البصر</span></label>
+                                        <label><input type="checkbox"> <span data-i18n="pilgrim.hearingImpairment">ضعف السمع</span></label>
+                                        <label><input type="checkbox" checked> <span data-i18n="pilgrim.needsAssistance">يحتاج لمساعدة في التنقل</span></label>
+                                        <label><input type="checkbox"> <span data-i18n="pilgrim.mobilityIssues">صعوبة في الحركة</span></label>
+                                    </div>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label for="preferredLanguage" data-i18n="pilgrim.preferredLanguage">اللغة المفضلة</label>
+                                    <select id="preferredLanguage">
+                                        <option value="ar">العربية</option>
+                                        <option value="en">English</option>
+                                        <option value="fr">Français</option>
+                                        <option value="ur">اردو</option>
+                                    </select>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary" data-i18n="pilgrim.saveChanges">حفظ التغييرات</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>منصة الحجاج للتنقل</h3>
+                    <p>Hajj Mobility Platform</p>
+                </div>
+                <div class="footer-links">
+                    <ul>
+                        <li><a href="index.html" data-i18n="nav.home">الرئيسية</a></li>
+                        <li><a href="about.html" data-i18n="nav.about">عن المنصة</a></li>
+                        <li><a href="#" data-i18n="footer.privacyPolicy">سياسة الخصوصية</a></li>
+                        <li><a href="#" data-i18n="footer.contactUs">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <p><i class="fas fa-envelope"></i> support@hajjmobility.com</p>
+                    <p><i class="fas fa-phone"></i> +966 12 345 6789</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 منصة الحجاج للتنقل | Hajj Mobility Platform</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="locales/translations.js"></script>
+    <script src="js/language-switcher.js"></script>
+</body>
+</html>

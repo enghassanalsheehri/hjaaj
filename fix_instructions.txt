@@ -1,0 +1,36 @@
+تعليمات لتصحيح أكواد منصة الحجاج للتنقل:
+
+1. تصحيح مشكلة الخرائط:
+-----------------
+في ملف pilgrim.html:
+- استبدل الأسطر من 7 إلى 13 (Leaflet Map CSS and JS) بالكود التالي:
+```html
+<!-- Google Maps API with necessary libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places,geometry"></script>
+```
+
+في ملف driver.html:
+- أضف سطر Google Maps API قبل سطر CSS بعد عنوان الصفحة:
+```html
+<!-- Google Maps API with necessary libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&libraries=places,geometry"></script>
+```
+
+ملاحظة: استبدل YOUR_API_KEY_HERE بمفتاح API حقيقي من Google Cloud Console.
+
+2. تحسين نظام الدفع:
+-----------------
+في ملف js/payment-integration.js:
+- تحديث قائمة خيارات الدفع لتشمل Google Pay ومزيد من الخيارات الإقليمية
+- إضافة وظائف تشفير لبيانات البطاقات الائتمانية
+- تحسين التحقق من صحة بيانات بطاقة الائتمان
+- إضافة خيار لتخزين طرق الدفع بشكل آمن
+
+3. إضافة قسم أمان إضافي:
+---------------------
+- تأكد من أن جميع طلبات الدفع تتم عبر HTTPS
+- لا تخزن بيانات بطاقات الائتمان الكاملة محليًا
+- استخدم تقنية التشفير المناسبة لحماية البيانات المالية
+- أضف رمز التحقق برسالة SMS للمعاملات الكبيرة
+
+هذه التعديلات ستساعد في تحسين وظائف الخرائط ونظام الدفع في المنصة.

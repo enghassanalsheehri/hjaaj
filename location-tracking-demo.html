@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تجربة تتبع المواقع | منصة الحجاج للتنقل</title>
+    
+    <!-- Mapbox CSS and JavaScript -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            width: 250px;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+        
+        .control-panel h3 {
+            margin-top: 0;
+            color: #007c4f;
+        }
+        
+        button {
+            background-color: #007c4f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #006240;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        
+        .client-marker, .driver-marker {
+            display: block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+        }
+        
+        .client-marker {
+            background-color: #3887be;
+        }
+        
+        .driver-marker {
+            background-color: #f28cb1;
+        }
+        
+        .trip-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f4ea;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <h3>تجربة تتبع المواقع</h3>
+        
+        <div class="status">
+            <p><strong>حالة الطلب:</strong> <span id="order-status">لم يتم إرسال طلب</span></p>
+        </div>
+        
+        <button id="request-service">طلب خدمة</button>
+        <button id="accept-request" style="display: none; background-color: #28a745;">قبول الطلب</button>
+        <button id="start-trip" style="display: none; background-color: #17a2b8;">بدء الرحلة</button>
+        <button id="complete-trip" style="display: none; background-color: #6c757d;">إنهاء الرحلة</button>
+        
+        <div id="trip-info" class="trip-info" style="display: none;">
+            <p><strong>المسافة:</strong> <span id="distance">-</span> كم</p>
+            <p><strong>الوقت المقدر:</strong> <span id="duration">-</span> دقيقة</p>
+            <p><strong>التكلفة المقدرة:</strong> <span id="cost">-</span> ريال</p>
+        </div>
+    </div>
+    
+    <script>
+    // تعيين مفتاح API الخاص بـ Mapbox
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFzc2FuMTk3NDIwMTEiLCJhIjoiY203bzY0dnpuMDc1cDJscjNkejExcW5haiJ9.fgmcHX49AnN3Kag-fMWY7g';
+    
+    // إحداثيات مكة المكرمة (المسجد الحرام)
+    const meccaCoordinates = [39.826168, 21.422510];
+    
+    // إحداثيات قريبة للعميل (على بعد ~1-2 كم من المسجد الحرام)
+    const clientCoordinates = [39.840, 21.430];
+    
+    // إحداثيات أبعد للسائق (على بعد ~3-4 كم من المسجد الحرام)
+    const driverCoordinates = [39.850, 21.410];
+    
+    // الوجهة (المسجد الحرام)
+    const destinationCoordinates = meccaCoordinates;
+    
+    // تهيئة الخريطة
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: meccaCoordinates,
+        zoom: 13
+    });
+    
+    // إضافة عناصر التحكم
+    map.addControl(new mapboxgl.NavigationControl());
+    
+    // علامات للمواقع
+    let clientMarker, driverMarker, destinationMarker;
+    
+    // رسم المسار
+    let routeLine;
+    
+    // حالة الرحلة
+    let tripState = 'idle'; // idle, requested, accepted, started, completed
+    
+    // المسافة (بالكيلومتر)
+    let tripDistance = 0;
+    
+    map.on('load', function() {
+        // إنشاء علامة للعميل
+        const clientEl = document.createElement('div');
+        clientEl.className = 'client-marker';
+        clientMarker = new mapboxgl.Marker(clientEl)
+            .setLngLat(clientCoordinates)
+            .setPopup(new mapboxgl.Popup().setHTML("<h4>موقعك الحالي</h4>"))
+            .addTo(map);
+        
+        // إنشاء علامة للسائق
+        const driverEl = document.createElement('div');
+        driverEl.className = 'driver-marker';
+        driverMarker = new mapboxgl.Marker(driverEl)
+            .setLngLat(driverCoordinates)
+            .setPopup(new mapboxgl.Popup().setHTML("<h4>موقع السائق</h4>"))
+            .addTo(map);
+        
+        // إنشاء علامة للوجهة (المسجد الحرام)
+        destinationMarker = new mapboxgl.Marker({ color: '#007c4f' })
+            .setLngLat(destinationCoordinates)
+            .setPopup(new mapboxgl.Popup().setHTML("<h4>المسجد الحرام</h4>"))
+            .addTo(map);
+        
+        // إضافة طبقة للمسار (سيتم تعبئتها لاحقًا)
+        map.addSource('route', {
+            type: 'geojson',
+            data: {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type: 'LineString',
+                    coordinates: []
+                }
+            }
+        });
+        
+        map.addLayer({
+            id: 'route',
+            type: 'line',
+            source: 'route',
+            layout: {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            paint: {
+                'line-color': '#007c4f',
+                'line-width': 6,
+                'line-opacity': 0.8
+            }
+        });
+        
+        // ضبط الرؤية لتشمل كل العلامات
+        const bounds = new mapboxgl.LngLatBounds()
+            .extend(clientCoordinates)
+            .extend(driverCoordinates)
+            .extend(destinationCoordinates);
+        
+        map.fitBounds(bounds, { padding: 70 });
+    });
+    
+    // أزرار التحكم
+    document.getElementById('request-service').addEventListener('click', function() {
+        if (tripState === 'idle') {
+            tripState = 'requested';
+            updateUI();
+            
+            // عرض معلومات الرحلة
+            calculateTripDetails();
+            
+            // محاكاة استجابة السائق بعد 3 ثوان
+            setTimeout(() => {
+                document.getElementById('accept-request').style.display = 'block';
+            }, 3000);
+        }
+    });
+    
+    document.getElementById('accept-request').addEventListener('click', function() {
+        if (tripState === 'requested') {
+            tripState = 'accepted';
+            updateUI();
+            
+            // محاكاة تحرك السائق نحو العميل
+            simulateDriverMovement();
+        }
+    });
+    
+    document.getElementById('start-trip').addEventListener('click', function() {
+        if (tripState === 'accepted') {
+            tripState = 'started';
+            updateUI();
+            
+            // تحديث المسار من العميل إلى الوجهة
+            updateRoute(clientCoordinates, destinationCoordinates);
+            
+            // محاكاة تحرك السائق والعميل نحو الوجهة
+            simulateJourneyToDestination();
+        }
+    });
+    
+    document.getElementById('complete-trip').addEventListener('click', function() {
+        if (tripState === 'started') {
+            tripState = 'completed';
+            updateUI();
+            
+            // عرض رسالة شكر
+            alert("شكراً لاستخدامك منصة الحجاج للتنقل!");
+            
+            // إعادة تعيين بعد 5 ثوان
+            setTimeout(resetDemo, 5000);
+        }
+    });
+    
+    // تحديث واجهة المستخدم وفقاً لحالة الرحلة
+    function updateUI() {
+        const statusEl = document.getElementById('order-status');
+        
+        switch(tripState) {
+            case 'idle':
+                statusEl.textContent = 'لم يتم إرسال طلب';
+                document.getElementById('request-service').style.display = 'block';
+                document.getElementById('accept-request').style.display = 'none';
+                document.getElementById('start-trip').style.display = 'none';
+                document.getElementById('complete-trip').style.display = 'none';
+                document.getElementById('trip-info').style.display = 'none';
+                break;
+            case 'requested':
+                statusEl.textContent = 'تم إرسال الطلب، بانتظار السائق';
+                document.getElementById('request-service').style.display = 'none';
+                document.getElementById('trip-info').style.display = 'block';
+                break;
+            case 'accepted':
+                statusEl.textContent = 'تم قبول الطلب، السائق في الطريق إليك';
+                document.getElementById('accept-request').style.display = 'none';
+                document.getElementById('start-trip').style.display = 'block';
+                break;
+            case 'started':
+                statusEl.textContent = 'الرحلة قيد التنفيذ';
+                document.getElementById('start-trip').style.display = 'none';
+                document.getElementById('complete-trip').style.display = 'block';
+                break;
+            case 'completed':
+                statusEl.textContent = 'تم إكمال الرحلة';
+                document.getElementById('complete-trip').style.display = 'none';
+                break;
+        }
+    }
+    
+    // حساب تفاصيل الرحلة (المسافة، الوقت، التكلفة)
+    function calculateTripDetails() {
+        // حساب المسافة بين العميل والوجهة (بالكيلومتر) - حساب بسيط جداً
+        const lat1 = clientCoordinates[1];
+        const lon1 = clientCoordinates[0];
+        const lat2 = destinationCoordinates[1];
+        const lon2 = destinationCoordinates[0];
+        
+        // صيغة هافرسين لحساب المسافة
+        const R = 6371; // نصف قطر الأرض بالكيلومتر
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        tripDistance = R * c;
+        
+        // تقدير الوقت (دقائق) بمتوسط سرعة 30 كم/ساعة
+        const durationMinutes = Math.round(tripDistance / 30 * 60);
+        
+        // تقدير التكلفة (20 ريال ثابت + 5 ريال لكل كيلومتر)
+        const cost = Math.round(20 + (tripDistance * 5));
+        
+        // تحديث العناصر
+        document.getElementById('distance').textContent = tripDistance.toFixed(1);
+        document.getElementById('duration').textContent = durationMinutes;
+        document.getElementById('cost').textContent = cost;
+        
+        // رسم المسار
+        updateRoute(clientCoordinates, destinationCoordinates);
+    }
+    
+    // تحديث المسار على الخريطة
+    function updateRoute(from, to) {
+        // في التطبيق الحقيقي، يجب استخدام Mapbox Directions API أو مشابه
+        // هنا سنستخدم خط مستقيم للتوضيح
+        const route = {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'LineString',
+                coordinates: [from, to]
+            }
+        };
+        
+        map.getSource('route').setData(route);
+    }
+    
+    // محاكاة تحرك السائق نحو العميل
+    function simulateDriverMovement() {
+        const steps = 10; // عدد الخطوات
+        let currentStep = 0;
+        
+        const interval = setInterval(() => {
+            currentStep++;
+            
+            if (currentStep <= steps) {
+                // حساب الموقع الجديد
+                const progress = currentStep / steps;
+                
+                const newLng = driverCoordinates[0] + (clientCoordinates[0] - driverCoordinates[0]) * progress;
+                const newLat = driverCoordinates[1] + (clientCoordinates[1] - driverCoordinates[1]) * progress;
+                
+                // تحديث موقع السائق
+                driverMarker.setLngLat([newLng, newLat]);
+                
+                // تحديث المسار
+                updateRoute([newLng, newLat], clientCoordinates);
+            } else {
+                clearInterval(interval);
+                
+                // وصل السائق
+                alert("وصل السائق إلى موقعك!");
+            }
+        }, 1000);
+    }
+    
+    // محاكاة رحلة العميل والسائق معاً إلى الوجهة
+    function simulateJourneyToDestination() {
+        const steps = 20; // عدد الخطوات
+        let currentStep = 0;
+        
+        const interval = setInterval(() => {
+            currentStep++;
+            
+            if (currentStep <= steps) {
+                // حساب الموقع الجديد
+                const progress = currentStep / steps;
+                
+                const newClientLng = clientCoordinates[0] + (destinationCoordinates[0] - clientCoordinates[0]) * progress;
+                const newClientLat = clientCoordinates[1] + (destinationCoordinates[1] - clientCoordinates[1]) * progress;
+                
+                // تحديث موقع العميل
+                clientMarker.setLngLat([newClientLng, newClientLat]);
+                
+                // تحديث موقع السائق (يتبع العميل عن قرب)
+                const newDriverLng = newClientLng - 0.001;
+                const newDriverLat = newClientLat - 0.001;
+                driverMarker.setLngLat([newDriverLng, newDriverLat]);
+                
+                // تحديث المسار
+                updateRoute([newDriverLng, newDriverLat], destinationCoordinates);
+            } else {
+                clearInterval(interval);
+                
+                // وصل العميل والسائق
+                alert("لقد وصلت إلى الوجهة!");
+            }
+        }, 1000);
+    }
+    
+    // إعادة ضبط التجربة
+    function resetDemo() {
+        // إعادة المؤشرات إلى مواقعها الأصلية
+        clientMarker.setLngLat(clientCoordinates);
+        driverMarker.setLngLat(driverCoordinates);
+        
+        // مسح المسار
+        map.getSource('route').setData({
+            type: 'Feature',
+            properties: {},
+            geometry: {
+                type: 'LineString',
+                coordinates: []
+            }
+        });
+        
+        // إعادة ضبط الحالة
+        tripState = 'idle';
+        updateUI();
+    }
+    </script>
+</body>
+</html>

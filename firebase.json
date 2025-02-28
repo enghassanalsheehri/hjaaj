@@ -1,0 +1,24 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/pilgrim",
+        "destination": "/pilgrim.html"
+      },
+      {
+        "source": "/driver",
+        "destination": "/driver.html"
+      },
+      {
+        "source": "/about",
+        "destination": "/about.html"
+      }
+    ]
+  }
+}

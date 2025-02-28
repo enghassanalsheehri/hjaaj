@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>اختبار خريطة Mapbox البسيطة</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        // مفتاح API الخاص بـ Mapbox
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaGFzc2FuMTk3NDIwMTEiLCJhIjoiY203bzY0dnpuMDc1cDJscjNkejExcW5haiJ9.fgmcHX49AnN3Kag-fMWY7g';
+        
+        try {
+            // محاولة إنشاء خريطة جديدة
+            const map = new mapboxgl.Map({
+                container: 'map', // معرف الحاوية في HTML
+                style: 'mapbox://styles/mapbox/streets-v11', // نمط الخريطة
+                center: [39.826168, 21.422510], // إحداثيات مكة المكرمة [lng, lat]
+                zoom: 13 // مستوى التكبير الأولي
+            });
+            
+            // إضافة عنصر التحكم في التنقل
+            map.addControl(new mapboxgl.NavigationControl());
+            
+            // إضافة علامة عند تحميل الخريطة
+            map.on('load', function() {
+                // إضافة علامة في مركز الخريطة
+                new mapboxgl.Marker()
+                    .setLngLat([39.826168, 21.422510])
+                    .addTo(map);
+                
+                alert('تم تحميل الخريطة بنجاح!');
+            });
+            
+            // التعامل مع الأخطاء
+            map.on('error', function(e) {
+                alert('خطأ في الخريطة: ' + e.error.message);
+            });
+        } catch (error) {
+            // عرض أي أخطاء تحدث أثناء إنشاء الخريطة
+            alert('خطأ: ' + error.message);
+        }
+    </script>
+</body>
+</html>

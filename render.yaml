@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: hajj-mobility-platform
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    # Redireccionamientos para manejar las rutas
+    routes:
+      - type: rewrite
+        source: /pilgrim
+        destination: /pilgrim.html
+      - type: rewrite
+        source: /driver
+        destination: /driver.html
+      - type: rewrite
+        source: /about
+        destination: /about.html

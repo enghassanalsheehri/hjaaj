@@ -1,0 +1,6 @@
+<!-- استبدل أسطر Leaflet.js في ملف pilgrim.html (الأسطر 7-13) بهذه الأسطر: -->
+
+<!-- Google Maps API with necessary libraries -->
+<script src="https://maps.googleapis.com/maps/api/js?key=INSERT_YOUR_API_KEY_HERE&libraries=places,geometry"></script>
+
+<!-- ملاحظة: يجب عليك الحصول على مفتاح API خاص بك من Google Cloud Console والاشتراك في خدمة Maps JavaScript API -->

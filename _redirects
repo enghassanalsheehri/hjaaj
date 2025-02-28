@@ -1,0 +1,8 @@
+/pilgrim    /pilgrim.html    200
+/driver     /driver.html     200
+/about      /about.html      200
+/css/*      /css/:splat      200
+/js/*       /js/:splat       200
+/images/*   /images/:splat   200
+/locales/*  /locales/:splat  200
+/*          /index.html      404

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحة السائق | منصة الحجاج للتنقل</title>
+    
+    <!-- Mapbox CSS and JavaScript -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    
+    <!-- Mapbox Geocoder Plugin for Search -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    
+    <!-- Turf.js for Geospatial Analysis -->
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <h1>منصة الحجاج للتنقل</h1>
+                <p>Hajj Mobility Platform</p>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" data-i18n="nav.home">الرئيسية</a></li>
+                    <li><a href="pilgrim.html" data-i18n="nav.pilgrim">صفحة الحاج</a></li>
+                    <li><a href="driver.html" class="active" data-i18n="nav.driver">صفحة السائق</a></li>
+                    <li><a href="about.html" data-i18n="nav.about">عن المنصة</a></li>
+                </ul>
+            </nav>
+            <div class="language-switch">
+                <button id="langToggle" data-i18n="language.switch">English</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="pilgrim-dashboard">
+            <div class="container">
+                <h2 data-i18n="driver.dashboard">لوحة تحكم السائق</h2>
+                
+                <div class="dashboard-container">
+                    <div class="sidebar">
+                        <div class="user-profile">
+                            <div class="avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <h3 id="driverName">اسم السائق</h3>
+                            <p id="driverId">رقم التعريف: <span>D12345</span></p>
+                        </div>
+                        <div class="nav-menu">
+                            <ul>
+                                <li class="active"><a href="#driver-status" data-i18n="driver.onlineStatus">الحالة</a></li>
+                                <li><a href="#available-requests" data-i18n="driver.availableRequests">الطلبات المتاحة</a></li>
+                                <li><a href="#active-trips" data-i18n="driver.activeTrips">الرحلات الجارية</a></li>
+                                <li><a href="#trip-history" data-i18n="driver.tripHistory">سجل الرحلات</a></li>
+                                <li><a href="#driver-settings" data-i18n="driver.accountSettings">إعدادات الحساب</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <div id="driver-status" class="dashboard-section active">
+                            <h3 data-i18n="driver.onlineStatus">الحالة</h3>
+                            <div class="status-toggle">
+                                <label class="switch">
+                                    <input type="checkbox" id="driver-online-toggle">
+                                    <span class="slider round"></span>
+                                </label>
+                                <span id="online-status-text" data-i18n="driver.offline">غير متصل</span>
+                            </div>
+                            
+                            <!-- Driver Location Map -->
+                            <div class="form-group">
+                                <h4 data-i18n="driver.currentLocation">الموقع الحالي:</h4>
+                                <div id="driver-map" class="map-container"></div>
+                                
+                                <div class="location-display">
+                                    <button type="button" id="update-driver-location" class="btn btn-sm btn-secondary">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <span data-i18n="map.updateLocation">تحديث الموقع</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Navigation Panel -->
+                            <div class="form-group">
+                                <div id="navigation-panel" class="navigation-panel" style="display: none;">
+                                    <h4 data-i18n="driver.navigation">الملاحة الحية:</h4>
+                                    <div id="directions-panel"></div>
+                                    <div class="navigation-controls">
+                                        <button type="button" id="start-navigation" class="btn btn-primary">
+                                            <i class="fas fa-play"></i> 
+                                            <span data-i18n="map.startNavigation">بدء الملاحة</span>
+                                        </button>
+                                        <button type="button" id="end-navigation" class="btn btn-danger" style="display: none;">
+                                            <i class="fas fa-stop"></i> 
+                                            <span data-i18n="map.endNavigation">إنهاء الملاحة</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="available-requests" class="dashboard-section">
+                            <h3 data-i18n="driver.availableRequests">الطلبات المتاحة</h3>
+                            
+                            <!-- Requests Map Overview -->
+                            <div class="form-group">
+                                <div id="requests-map" class="map-container"></div>
+                            </div>
+                            
+                            <!-- Available Requests List -->
+                            <div class="request-list">
+                                <!-- Sample Request Item -->
+                                <div class="request-item">
+                                    <div class="request-header">
+                                        <div class="request-pilgrim">
+                                            <i class="fas fa-user"></i>
+                                            <span>حاج #P78901</span>
+                                        </div>
+                                        <div class="request-time">
+                                            <i class="fas fa-clock"></i>
+                                            <span>منذ 2 دقيقة</span>
+                                        </div>
+                                    </div>
+                                    <div class="request-details">
+                                        <div class="route-info">
+                                            <div class="location">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span data-i18n="map.pickupLocation">موقع الاستلام:</span>
+                                                <strong>المسجد الحرام</strong>
+                                            </div>
+                                            <div class="location">
+                                                <i class="fas fa-flag-checkered"></i>
+                                                <span data-i18n="map.destination">الوجهة:</span>
+                                                <strong>مزدلفة</strong>
+                                            </div>
+                                        </div>
+                                        <div class="request-distance">
+                                            <i class="fas fa-route"></i>
+                                            <span>3.5 كم</span>
+                                        </div>
+                                    </div>
+                                    <div class="request-actions">
+                                        <button type="button" class="btn btn-primary accept-request">
+                                            <i class="fas fa-check"></i>
+                                            <span data-i18n="driver.acceptRequest">قبول الطلب</span>
+                                        </button>
+                                        <button type="button" class="btn btn-secondary view-route">
+                                            <i class="fas fa-map"></i>
+                                            <span data-i18n="driver.viewRoute">عرض المسار</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Sample Request Item -->
+                                <div class="request-item">
+                                    <div class="request-header">
+                                        <div class="request-pilgrim">
+                                            <i class="fas fa-user"></i>
+                                            <span>حاج #P45678</span>
+                                        </div>
+                                        <div class="request-time">
+                                            <i class="fas fa-clock"></i>
+                                            <span>منذ 5 دقائق</span>
+                                        </div>
+                                    </div>
+                                    <div class="request-details">
+                                        <div class="route-info">
+                                            <div class="location">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span data-i18n="map.pickupLocation">موقع الاستلام:</span>
+                                                <strong>منى</strong>
+                                            </div>
+                                            <div class="location">
+                                                <i class="fas fa-flag-checkered"></i>
+                                                <span data-i18n="map.destination">الوجهة:</span>
+                                                <strong>عرفات</strong>
+                                            </div>
+                                        </div>
+                                        <div class="request-distance">
+                                            <i class="fas fa-route"></i>
+                                            <span>7.2 كم</span>
+                                        </div>
+                                    </div>
+                                    <div class="request-actions">
+                                        <button type="button" class="btn btn-primary accept-request">
+                                            <i class="fas fa-check"></i>
+                                            <span data-i18n="driver.acceptRequest">قبول الطلب</span>
+                                        </button>
+                                        <button type="button" class="btn btn-secondary view-route">
+                                            <i class="fas fa-map"></i>
+                                            <span data-i18n="driver.viewRoute">عرض المسار</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="active-trips" class="dashboard-section">
+                            <h3 data-i18n="driver.activeTrips">الرحلات الجارية</h3>
+                            <p>هذه الصفحة قيد التطوير وستكون متاحة قريباً.</p>
+                            <p>This section is under development and will be available soon.</p>
+                        </div>
+                        
+                        <div id="trip-history" class="dashboard-section">
+                            <h3 data-i18n="driver.tripHistory">سجل الرحلات</h3>
+                            <p>هذه الصفحة قيد التطوير وستكون متاحة قريباً.</p>
+                            <p>This section is under development and will be available soon.</p>
+                        </div>
+                        
+                        <div id="driver-settings" class="dashboard-section">
+                            <h3 data-i18n="driver.accountSettings">إعدادات الحساب</h3>
+                            <p>هذه الصفحة قيد التطوير وستكون متاحة قريباً.</p>
+                            <p>This section is under development and will be available soon.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h2>منصة الحجاج للتنقل</h2>
+                    <p>Hajj Mobility Platform</p>
+                </div>
+                <div class="footer-links">
+                    <h3 data-i18n="footer.quickLinks">روابط سريعة</h3>
+                    <ul>
+                        <li><a data-i18n="nav.home" href="index.html">الرئيسية</a></li>
+                        <li><a data-i18n="nav.pilgrim" href="pilgrim.html">صفحة الحاج</a></li>
+                        <li><a data-i18n="nav.driver" href="driver.html">صفحة السائق</a></li>
+                        <li><a data-i18n="nav.about" href="about.html">عن المنصة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-contact">
+                    <h3 data-i18n="footer.contact">تواصل معنا</h3>
+                    <p><i class="fas fa-envelope"></i> support@hajjmobility.com</p>
+                    <p><i class="fas fa-phone"></i> +966 12 345 6789</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 منصة الحجاج للتنقل | Hajj Mobility Platform</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="locales/translations.js"></script>
+    <script src="js/language-switcher.js"></script>
+    <script src="js/driver.js"></script>
+    <script src="js/gps-integration.js"></script>
+</body>
+</html>

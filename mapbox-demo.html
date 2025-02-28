@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>عرض توضيحي لخرائط Mapbox | منصة الحجاج للتنقل</title>
+    
+    <!-- Mapbox CSS and JavaScript -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+    
+    <!-- Mapbox Geocoder Plugin -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .map-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 1;
+            max-width: 300px;
+        }
+        
+        h1 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        
+        .mapboxgl-ctrl-geocoder {
+            min-width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="map-overlay">
+        <h1>عرض توضيحي لخرائط Mapbox</h1>
+        <p>يمكنك استخدام مربع البحث لتحديد وجهة في مكة المكرمة.</p>
+    </div>
+    
+    <script>
+        // تعيين مفتاح API الخاص بـ Mapbox
+        mapboxgl.accessToken = 'pk.eyJ1IjoiaGFzc2FuMTk3NDIwMTEiLCJhIjoiY203bzY0dnpuMDc1cDJscjNkejExcW5haiJ9.fgmcHX49AnN3Kag-fMWY7g';
+        
+        // إنشاء الخريطة الرئيسية
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [39.826168, 21.422510], // مكة المكرمة [lng, lat]
+            zoom: 13,
+            language: 'ar'
+        });
+        
+        // إضافة أدوات التحكم في التنقل
+        map.addControl(new mapboxgl.NavigationControl());
+        
+        // إضافة أداة تحديد الموقع الحالي
+        map.addControl(new mapboxgl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: true
+            },
+            trackUserLocation: true
+        }));
+        
+        // إضافة أداة البحث عن المواقع
+        const geocoder = new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            placeholder: 'أدخل الوجهة',
+            language: 'ar',
+            marker: {
+                color: '#FF0000'
+            }
+        });
+        
+        map.addControl(geocoder);
+        
+        // عند اختيار موقع من البحث
+        geocoder.on('result', function(result) {
+            console.log('Location selected:', result.result);
+            
+            // إنشاء علامة في الموقع المحدد
+            const coordinates = result.result.center;
+            
+            // إضافة علامة بداية للرحلة (المسجد الحرام كمثال)
+            const startMarker = new mapboxgl.Marker({ color: '#00FF00' })
+                .setLngLat([39.826168, 21.422510])
+                .addTo(map);
+                
+            // رسم مسار بين نقطة البداية والنقطة المحددة
+            if (map.getSource('route')) {
+                map.removeLayer('route');
+                map.removeSource('route');
+            }
+            
+            // إضافة مصدر للمسار
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [39.826168, 21.422510], // نقطة البداية
+                            coordinates
+                        ]
+                    }
+                }
+            });
+            
+            // إضافة طبقة للمسار
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#3887be',
+                    'line-width': 5,
+                    'line-opacity': 0.75
+                }
+            });
+            
+            // تعديل العرض ليشمل المسار كاملاً
+            const bounds = new mapboxgl.LngLatBounds()
+                .extend([39.826168, 21.422510])
+                .extend(coordinates);
+                
+            map.fitBounds(bounds, { padding: 100 });
+            
+            // حساب المسافة (بشكل تقريبي)
+            const startPoint = turf.point([39.826168, 21.422510]);
+            const endPoint = turf.point(coordinates);
+            const distance = turf.distance(startPoint, endPoint, { units: 'kilometers' });
+            
+            // إظهار معلومات الرحلة
+            alert(`تم تحديد الوجهة: ${result.result.place_name}\nالمسافة التقريبية: ${distance.toFixed(2)} كم`);
+        });
+        
+        // إضافة علامة للمسجد الحرام
+        new mapboxgl.Marker()
+            .setLngLat([39.826168, 21.422510])
+            .setPopup(new mapboxgl.Popup({ offset: 25 }).setText('المسجد الحرام'))
+            .addTo(map);
+            
+        // إضافة علامات لأماكن مهمة أخرى
+        const importantPlaces = [
+            { name: 'منى', coordinates: [39.8933, 21.4133] },
+            { name: 'مزدلفة', coordinates: [39.9321, 21.4037] },
+            { name: 'عرفات', coordinates: [39.9842, 21.3536] },
+            { name: 'الجمرات', coordinates: [39.8737, 21.4225] }
+        ];
+        
+        importantPlaces.forEach(place => {
+            new mapboxgl.Marker({ color: '#3887be' })
+                .setLngLat(place.coordinates)
+                .setPopup(new mapboxgl.Popup({ offset: 25 }).setText(place.name))
+                .addTo(map);
+        });
+    </script>
+</body>
+</html>
