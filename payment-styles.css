@@ -1,0 +1,275 @@
+/**
+ * Payment System Styles
+ * Dedicated CSS file for styling payment components
+ */
+
+/* Payment Options */
+.payment-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.payment-option {
+    flex: 1;
+    min-width: 150px;
+    max-width: 200px;
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+}
+
+.payment-option.selected {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.payment-option input[type="radio"] {
+    display: none;
+}
+
+.payment-option label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+}
+
+.payment-option i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.payment-option.selected i {
+    color: #007bff;
+}
+
+/* Payment Forms */
+.payment-form {
+    background: #f9f9f9;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+}
+
+.card-payment-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.card-payment-form input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.card-payment-form input.invalid {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.05);
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.form-check-input {
+    margin-right: 0.5rem;
+}
+
+.security-info {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 1rem;
+}
+
+.security-info i {
+    margin-right: 0.5rem;
+    color: #28a745;
+}
+
+/* Digital Wallet Forms */
+.digital-wallet-form {
+    text-align: center;
+}
+
+.wallet-logo {
+    margin: 2rem 0;
+}
+
+.wallet-logo i {
+    font-size: 4rem;
+    color: #333;
+}
+
+/* Cash Payment Form */
+.cash-payment-form {
+    text-align: center;
+}
+
+.cash-icon {
+    margin: 2rem 0;
+}
+
+.cash-icon i {
+    font-size: 4rem;
+    color: #28a745;
+}
+
+/* Payment Confirmation */
+.payment-confirmation {
+    text-align: center;
+    padding: 2rem;
+    border-radius: 8px;
+    margin-top: 2rem;
+}
+
+.payment-confirmation.success {
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.payment-confirmation.error {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.confirmation-icon {
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-icon i {
+    font-size: 4rem;
+}
+
+.payment-confirmation.success i {
+    color: #28a745;
+}
+
+.payment-confirmation.error i {
+    color: #dc3545;
+}
+
+.confirmation-actions {
+    margin: 1.5rem 0;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.payment-info, .help-info {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.error-code {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+    font-family: monospace;
+    margin: 0.5rem 0;
+}
+
+/* Payment Support Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.payment-support {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.payment-support ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1.5rem;
+}
+
+.payment-support li {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.payment-support li i {
+    margin-right: 0.5rem;
+    color: #007bff;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .payment-options {
+        justify-content: center;
+    }
+    
+    .payment-option {
+        flex: 0 0 45%;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .confirmation-actions {
+        flex-direction: column;
+    }
+    
+    .payment-support {
+        width: 95%;
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .payment-option {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
